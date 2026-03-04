@@ -141,10 +141,14 @@ const UploadPage: React.FC = () => {
                             // Data cleanup: convert numeric strings and booleans
                             const processedRow = { ...row };
 
-                            if (processedRow.numero_rejeicoes_c !== undefined) {
-                                const val = String(processedRow.numero_rejeicoes_c).trim();
-                                processedRow.numero_rejeicoes_c = (val === '' || isNaN(Number(val))) ? 0 : parseInt(val);
-                            }
+                            // Robust numeric parsing for integers
+                            const integerFields = ['numero_rejeicoes_c', 'records_count']; // Add any other potentially numeric fields
+                            integerFields.forEach(field => {
+                                if (processedRow[field] !== undefined) {
+                                    const val = String(processedRow[field]).trim();
+                                    processedRow[field] = (val === '' || isNaN(Number(val))) ? 0 : parseInt(val);
+                                }
+                            });
 
                             if (processedRow.is_global_c !== undefined) {
                                 processedRow.is_global_c = String(processedRow.is_global_c).toLowerCase() === 'true';
