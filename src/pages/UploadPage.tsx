@@ -141,8 +141,9 @@ const UploadPage: React.FC = () => {
                             // Data cleanup: convert numeric strings and booleans
                             const processedRow = { ...row };
 
-                            if (processedRow.numero_rejeicoes_c) {
-                                processedRow.numero_rejeicoes_c = parseInt(processedRow.numero_rejeicoes_c) || 0;
+                            if (processedRow.numero_rejeicoes_c !== undefined) {
+                                const val = String(processedRow.numero_rejeicoes_c).trim();
+                                processedRow.numero_rejeicoes_c = (val === '' || isNaN(Number(val))) ? 0 : parseInt(val);
                             }
 
                             if (processedRow.is_global_c !== undefined) {
