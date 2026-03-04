@@ -172,7 +172,7 @@ const UploadPage: React.FC = () => {
 
                     const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
-                    const chunkSize = 50;
+                    const chunkSize = 20; // Reduzido de 50 para evitar timeout
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
 
                     for (let i = 0; i < chunksCount; i++) {
@@ -186,7 +186,8 @@ const UploadPage: React.FC = () => {
                         if (insertError) throw insertError;
 
                         setProgress(Math.round(((i + 1) / chunksCount) * 100));
-                        await new Promise(r => setTimeout(r, 100));
+                        // Aumentado o delay para dar "fôlego" ao banco entre as operações
+                        await new Promise(r => setTimeout(r, 500));
                     }
 
                     await supabase
