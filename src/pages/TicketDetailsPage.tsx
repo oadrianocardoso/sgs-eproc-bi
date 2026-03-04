@@ -81,14 +81,14 @@ const TicketDetailsPage: React.FC = () => {
                             <StatusBadge status={ticket.status} />
                         </div>
                         <p className="text-[13px] text-text-muted mt-1 font-medium flex items-center gap-2">
-                            <Calendar size={14} /> Atualizado em {new Date(ticket.cricao || ticket.created_at || Date.now()).toLocaleString('pt-BR')}
+                            <Calendar size={14} /> Criado em {ticket.create_time ? new Date(ticket.create_time).toLocaleString('pt-BR') : '-'}
                         </p>
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    {ticket.status_operacional && (
+                    {ticket.phase_id && (
                         <span className="px-3 py-1.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-lg uppercase tracking-wider">
-                            {ticket.status_operacional}
+                            Fase: {ticket.phase_id}
                         </span>
                     )}
                 </div>
@@ -107,12 +107,12 @@ const TicketDetailsPage: React.FC = () => {
                         </div>
                         <div
                             className="text-[14px] text-text-secondary leading-relaxed bg-slate-50 p-6 rounded-xl border border-slate-100 min-h-[150px]"
-                            dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.descricao) || '<span class="text-slate-400 italic">Sem descrição informada</span>' }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.description) || '<span class="text-slate-400 italic">Sem descrição informada</span>' }}
                         />
                     </div>
 
                     {/* Solução (if present) */}
-                    {ticket.solucao && (
+                    {ticket.solution && (
                         <div className="bento-card border-emerald-100 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-10 opacity-50" />
                             <div className="flex items-center gap-2 mb-6 border-b border-emerald-50 pb-4">
@@ -123,20 +123,20 @@ const TicketDetailsPage: React.FC = () => {
                             </div>
                             <div
                                 className="text-[14px] text-emerald-900 leading-relaxed bg-white p-6 rounded-xl border border-emerald-50 shadow-sm"
-                                dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.solucao) }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.solution) }}
                             />
                         </div>
                     )}
 
                     {/* Anotações/Comentários (if present) */}
-                    {ticket.comentarios && (
+                    {ticket.comments && (
                         <div className="bento-card">
                             <div className="flex items-center gap-2 mb-6 border-b border-border-light pb-4">
-                                <h2 className="text-base font-bold text-text-primary">Comentários Adicionais</h2>
+                                <h2 className="text-base font-bold text-text-primary">Comentários e Histórico</h2>
                             </div>
                             <div
                                 className="text-[14px] text-text-secondary leading-relaxed p-4 rounded-xl border border-border-light bg-slate-50/50"
-                                dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.comentarios) }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.comments) }}
                             />
                         </div>
                     )}
@@ -145,30 +145,37 @@ const TicketDetailsPage: React.FC = () => {
                 {/* Sidebar Details Area */}
                 <div className="space-y-6">
                     <div className="bento-card">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-6 pb-4 border-b border-border-light">Informações do Chamado</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-6 pb-4 border-b border-border-light">Informações Detalhadas</h3>
 
                         <div className="space-y-5">
                             <div>
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
                                     <User size={12} /> Solicitante
                                 </label>
-                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.solicitado_para || '-'}</p>
+                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.requested_for_person || '-'}</p>
                             </div>
 
                             <hr className="border-border-light" />
 
                             <div>
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
-                                    <User size={12} className="text-primary-500" /> Especialista Designado
+                                    <Users size={12} /> Grupo Designado
                                 </label>
-                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.designado_especialista || 'Não atribuído'}</p>
+                                <p className="text-sm font-medium text-text-secondary uppercase">{ticket.assigned_to_group || '-'}</p>
                             </div>
 
                             <div>
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
-                                    <Users size={12} /> Grupo do Especialista
+                                    <Users size={12} className="text-primary-500" /> Grupo Especialista
                                 </label>
-                                <p className="text-sm font-medium text-text-secondary uppercase">{ticket.grupo_especialistas || '-'}</p>
+                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.expert_group || '-'}</p>
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
+                                    <User size={12} className="text-primary-500" /> Especialista
+                                </label>
+                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.expert_assignee || 'Não atribuído'}</p>
                             </div>
 
                             <hr className="border-border-light" />
@@ -178,7 +185,15 @@ const TicketDetailsPage: React.FC = () => {
                                     <Clock size={12} /> Data de Fechamento
                                 </label>
                                 <p className="text-sm font-medium text-text-secondary">
-                                    {ticket.hora_fechamento ? new Date(ticket.hora_fechamento).toLocaleString('pt-BR') : 'Em andamento'}
+                                    {ticket.close_time ? new Date(ticket.close_time).toLocaleString('pt-BR') : 'Em andamento'}
+                                </p>
+                            </div>
+                            <div>
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
+                                    <Clock size={12} /> Última Atualização
+                                </label>
+                                <p className="text-sm font-medium text-text-secondary">
+                                    {ticket.last_update_time ? new Date(ticket.last_update_time).toLocaleString('pt-BR') : '-'}
                                 </p>
                             </div>
                         </div>

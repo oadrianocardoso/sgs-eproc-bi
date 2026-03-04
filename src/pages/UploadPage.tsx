@@ -88,16 +88,30 @@ const UploadPage: React.FC = () => {
             encoding: 'UTF-8',
             transformHeader: (header) => {
                 const clean = header.trim().replace(/^[\uFEFF\u200B\u200C\u200D\u200E\u200F]+|[\uFEFF\u200B\u200C\u200D\u200E\u200F]+$/g, '').replace(/^"|"$/g, '');
+                
                 const mapping: Record<string, string> = {
-                    'ID': 'id',
-                    'Solicitado para': 'solicitado_para',
-                    'Descrição': 'descricao',
-                    'Solução': 'solucao'
+                    'Id': 'id',
+                    'CreateTime': 'create_time',
+                    'CloseTime': 'close_time',
+                    'LastUpdateTime': 'last_update_time',
+                    'StatusSCCDSMAX_c': 'status_sccdsmax_c',
+                    'Status': 'status',
+                    'RequestedForPerson': 'requested_for_person',
+                    'Description': 'description',
+                    'Solution': 'solution',
+                    'AssignedToGroup': 'assigned_to_group',
+                    'ExpertGroup': 'expert_group',
+                    'ExpertAssignee': 'expert_assignee',
+                    'AtendidoPor_c': 'atendido_por_c',
+                    'GlobalId_c.Id': 'global_id_c_id',
+                    'GlobalId_c': 'global_id_c',
+                    'IsGlobal_c': 'is_global_c',
+                    'NumeroRejeicoes_c': 'numero_rejeicoes_c',
+                    'Comments': 'comments',
+                    'PhaseId': 'phase_id'
                 };
-                for (const [key, val] of Object.entries(mapping)) {
-                    if (clean.toLowerCase() === key.toLowerCase()) return val;
-                }
-                return clean.toLowerCase().replace(/\s+/g, '_');
+
+                return mapping[clean] || clean.toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
             },
             complete: async (results) => {
                 const totalRows = results.data.length;
@@ -120,20 +134,33 @@ const UploadPage: React.FC = () => {
 
                     if (historyError) throw historyError;
 
+                    // Deduplicate and process data
                     const uniqueDataMap = new Map();
                     results.data.forEach((row: any) => {
                         if (row.id) {
-                            uniqueDataMap.set(row.id, row);
+                            // Data cleanup: convert numeric strings and booleans
+                            const processedRow = { ...row };
+                            
+                            if (processedRow.numero_rejeicoes_c) {
+                                processedRow.numero_rejeicoes_c = parseInt(processedRow.numero_rejeicoes_c) || 0;
+                            }
+                            
+                            if (processedRow.is_global_c !== undefined) {
+                                processedRow.is_global_c = String(processedRow.is_global_c).toLowerCase() === 'true';
+                            }
+
+                            // Ensure empty dates are null
+                            ['create_time', 'close_time', 'last_update_time'].forEach(field => {
+                                if (!processedRow[field] || processedRow[field] === '') {
+                                    processedRow[field] = null;
+                                }
+                            });
+
+                            uniqueDataMap.set(row.id, processedRow);
                         }
                     });
 
-                    const uniqueProcessedData = Array.from(uniqueDataMap.values()).map((row: any) => ({
-                        id: row.id,
-                        status: row.status,
-                        solicitado_para: row.solicitado_para,
-                        descricao: row.descricao,
-                        solucao: row.solucao
-                    }));
+                    const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
                     const chunkSize = 50;
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);

@@ -8,16 +8,24 @@ import Tooltip from '../components/Tooltip';
 
 interface Chamado {
     id: string;
-    created_at: string;
-    solicitado_para: string;
-    descricao: string;
-    solucao: string;
+    create_time: string;
+    close_time: string;
+    last_update_time: string;
+    status_sccdsmax_c: string;
     status: string;
-    designado_especialista: string;
-    grupo_especialistas: string;
-    status_operacional: string;
-    hora_fechamento: string;
-    comentarios: string;
+    requested_for_person: string;
+    description: string;
+    solution: string;
+    assigned_to_group: string;
+    expert_group: string;
+    expert_assignee: string;
+    atendido_por_c: string;
+    global_id_c_id: string;
+    global_id_c: string;
+    is_global_c: boolean;
+    numero_rejeicoes_c: number;
+    comments: string;
+    phase_id: string;
     total_count?: number;
 }
 
@@ -211,15 +219,17 @@ const SearchPage: React.FC = () => {
                                 <tr>
                                     <th className="sticky-col">ID</th>
                                     <th>Criação</th>
+                                    <th>Status</th>
                                     <th>Solicitante</th>
+                                    <th>Grupo Designado</th>
                                     <th>Grupo Especialista</th>
                                     <th>Especialista</th>
+                                    <th>Atendido Por</th>
                                     <th>Descrição</th>
                                     <th>Solução</th>
-                                    <th>Observações</th>
-                                    <th>Conclusão</th>
-                                    <th>Operacional</th>
-                                    <th>Status Final</th>
+                                    <th>Comentários</th>
+                                    <th>Fechamento</th>
+                                    <th>Global ID</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -245,53 +255,63 @@ const SearchPage: React.FC = () => {
                                                 </Tooltip>
                                             </td>
                                             <td className="text-text-secondary">
-                                                <Tooltip text={ticket.created_at ? new Date(ticket.created_at).toLocaleString('pt-BR') : '-'}>
-                                                    {ticket.created_at ? new Date(ticket.created_at).toLocaleString('pt-BR') : '-'}
-                                                </Tooltip>
-                                            </td>
-                                            <td className="font-semibold text-text-primary uppercase">
-                                                <Tooltip text={ticket.solicitado_para}>
-                                                    {ticket.solicitado_para}
-                                                </Tooltip>
-                                            </td>
-                                            <td className="text-text-muted uppercase">
-                                                <Tooltip text={ticket.grupo_especialistas || '-'}>
-                                                    {ticket.grupo_especialistas || '-'}
-                                                </Tooltip>
-                                            </td>
-                                            <td className="font-bold text-text-primary uppercase">
-                                                <Tooltip text={ticket.designado_especialista || '-'}>
-                                                    {ticket.designado_especialista || '-'}
-                                                </Tooltip>
-                                            </td>
-                                            <td className="text-[13px] text-text-secondary">
-                                                <Tooltip text={ticket.descricao?.replace(/<[^>]*>/g, '') || ''}>
-                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.descricao) }} />
-                                                </Tooltip>
-                                            </td>
-                                            <td className="text-[13px] text-emerald-700">
-                                                <Tooltip text={ticket.solucao?.replace(/<[^>]*>/g, '') || ''}>
-                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.solucao) }} />
-                                                </Tooltip>
-                                            </td>
-                                            <td className="text-[13px] text-text-muted">
-                                                <Tooltip text={ticket.comentarios?.replace(/<[^>]*>/g, '') || ''}>
-                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.comentarios) }} />
-                                                </Tooltip>
-                                            </td>
-                                            <td className="text-text-secondary">
-                                                <Tooltip text={ticket.hora_fechamento ? new Date(ticket.hora_fechamento).toLocaleString('pt-BR') : '-'}>
-                                                    {ticket.hora_fechamento ? new Date(ticket.hora_fechamento).toLocaleString('pt-BR') : '-'}
-                                                </Tooltip>
-                                            </td>
-                                            <td>
-                                                <Tooltip text={ticket.status_operacional || '-'}>
-                                                    <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 rounded">{ticket.status_operacional}</span>
+                                                <Tooltip text={ticket.create_time ? new Date(ticket.create_time).toLocaleString('pt-BR') : '-'}>
+                                                    {ticket.create_time ? new Date(ticket.create_time).toLocaleString('pt-BR') : '-'}
                                                 </Tooltip>
                                             </td>
                                             <td>
                                                 <Tooltip text={ticket.status || '-'}>
                                                     <StatusBadge status={ticket.status} />
+                                                </Tooltip>
+                                            </td>
+                                            <td className="font-semibold text-text-primary uppercase">
+                                                <Tooltip text={ticket.requested_for_person}>
+                                                    {ticket.requested_for_person}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-text-muted uppercase">
+                                                <Tooltip text={ticket.assigned_to_group || '-'}>
+                                                    {ticket.assigned_to_group || '-'}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-text-muted uppercase">
+                                                <Tooltip text={ticket.expert_group || '-'}>
+                                                    {ticket.expert_group || '-'}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="font-bold text-text-primary uppercase">
+                                                <Tooltip text={ticket.expert_assignee || '-'}>
+                                                    {ticket.expert_assignee || '-'}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-text-secondary uppercase">
+                                                <Tooltip text={ticket.atendido_por_c || '-'}>
+                                                    {ticket.atendido_por_c || '-'}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-[13px] text-text-secondary">
+                                                <Tooltip text={ticket.description?.replace(/<[^>]*>/g, '') || ''}>
+                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.description) }} />
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-[13px] text-emerald-700">
+                                                <Tooltip text={ticket.solution?.replace(/<[^>]*>/g, '') || ''}>
+                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.solution) }} />
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-[13px] text-text-muted">
+                                                <Tooltip text={ticket.comments?.replace(/<[^>]*>/g, '') || ''}>
+                                                    <span dangerouslySetInnerHTML={{ __html: sanitizeTicketHtml(ticket.comments) }} />
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-text-secondary">
+                                                <Tooltip text={ticket.close_time ? new Date(ticket.close_time).toLocaleString('pt-BR') : '-'}>
+                                                    {ticket.close_time ? new Date(ticket.close_time).toLocaleString('pt-BR') : '-'}
+                                                </Tooltip>
+                                            </td>
+                                            <td className="text-text-muted">
+                                                <Tooltip text={ticket.global_id_c || '-'}>
+                                                    {ticket.global_id_c || '-'}
                                                 </Tooltip>
                                             </td>
                                         </tr>
