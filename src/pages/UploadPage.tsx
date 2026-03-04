@@ -172,9 +172,8 @@ const UploadPage: React.FC = () => {
 
                     const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
-                    // Reduzido para 1 para evitar "statement timeout"
-                    // O banco possui 3 índices GIN (FTS + 2 Trigram) que tornam cada insert/update pesado
-                    const chunkSize = 1;
+                    // Aumentado para 10 após remoção temporária dos índices via MCP (Statement Timeout resolvido manualmente)
+                    const chunkSize = 10;
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
 
                     for (let i = 0; i < chunksCount; i++) {
@@ -188,8 +187,8 @@ const UploadPage: React.FC = () => {
                         if (insertError) throw insertError;
 
                         setProgress(Math.round(((i + 1) / chunksCount) * 100));
-                        // Delay para evitar pico de CPU no banco durante o processamento dos índices
-                        await new Promise(r => setTimeout(r, 300));
+                        // Delay reduzido para acelerar o processo sem sobrecarregar
+                        await new Promise(r => setTimeout(r, 100));
                     }
 
                     await supabase
