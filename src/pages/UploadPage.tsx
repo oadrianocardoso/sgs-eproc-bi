@@ -88,7 +88,7 @@ const UploadPage: React.FC = () => {
             encoding: 'UTF-8',
             transformHeader: (header) => {
                 const clean = header.trim().replace(/^[\uFEFF\u200B\u200C\u200D\u200E\u200F]+|[\uFEFF\u200B\u200C\u200D\u200E\u200F]+$/g, '').replace(/^"|"$/g, '');
-                
+
                 const mapping: Record<string, string> = {
                     'Id': 'id',
                     'CreateTime': 'create_time',
@@ -140,19 +140,24 @@ const UploadPage: React.FC = () => {
                         if (row.id) {
                             // Data cleanup: convert numeric strings and booleans
                             const processedRow = { ...row };
-                            
+
                             if (processedRow.numero_rejeicoes_c) {
                                 processedRow.numero_rejeicoes_c = parseInt(processedRow.numero_rejeicoes_c) || 0;
                             }
-                            
+
                             if (processedRow.is_global_c !== undefined) {
                                 processedRow.is_global_c = String(processedRow.is_global_c).toLowerCase() === 'true';
                             }
 
-                            // Ensure empty dates are null
-                            ['create_time', 'close_time', 'last_update_time'].forEach(field => {
-                                if (!processedRow[field] || processedRow[field] === '') {
+                            // Ensure empty dates are null or handle numeric timestamps
+                            const dateFields = ['create_time', 'close_time', 'last_update_time'];
+                            dateFields.forEach(field => {
+                                const val = processedRow[field];
+                                if (!val || val === '' || val === 'null' || val === 'undefined') {
                                     processedRow[field] = null;
+                                } else if (!isNaN(Number(val)) && val.length > 10) {
+                                    // Handle Unix milliseconds (e.g., "1744321607718")
+                                    processedRow[field] = new Date(Number(val)).toISOString();
                                 }
                             });
 
