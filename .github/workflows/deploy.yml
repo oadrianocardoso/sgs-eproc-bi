@@ -26,5 +26,6 @@ jobs:
           script: |
             cd /docker/sgs-eproc-bi
             git pull origin main
-            docker compose up -d --build
-            docker compose restart api-gateway postgrest
+            echo "DEPLOYED_COMMIT=$(git rev-parse HEAD)"
+            docker compose up -d --build --force-recreate --remove-orphans
+            docker compose ps
