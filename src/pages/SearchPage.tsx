@@ -8,17 +8,42 @@ import Tooltip from '../components/Tooltip';
 
 interface Chamado {
     id: string;
+    process_id: string;
     create_time: string;
     close_time: string;
     last_update_time: string;
+    data_envio_aceite_c: string;
+    number_of_attachments: number;
+    data_ultimo_adjunto_c: string;
+    slt_sla_target_date: string;
+    slt_ola_target_date: string;
     status_sccdsmax_c: string;
     status: string;
+    relation_layout_item: string;
+    requested_by_person: string;
+    requested_by_person_title: string;
     requested_for_person: string;
+    requested_for_person_avatar: string;
+    requested_for_person_org_group: string;
+    requested_for_person_upn: string;
+    requested_for_person_is_deleted: boolean;
+    requested_for_person_is_vip: boolean;
+    requested_for_person_id: string;
+    requested_for_person_name: string;
+    requested_for_person_location: string;
     description: string;
     solution: string;
     assigned_to_group: string;
     expert_group: string;
     expert_assignee: string;
+    expert_assignee_org_group: string;
+    expert_assignee_upn: string;
+    expert_assignee_is_deleted: boolean;
+    expert_assignee_is_vip: boolean;
+    expert_assignee_id: string;
+    expert_assignee_avatar: string;
+    expert_assignee_name: string;
+    expert_assignee_location: string;
     atendido_por_c: string;
     global_id_c_id: string;
     global_id_c: string;
@@ -265,8 +290,8 @@ const SearchPage: React.FC = () => {
                                                 </Tooltip>
                                             </td>
                                             <td className="font-semibold text-text-primary uppercase">
-                                                <Tooltip text={ticket.requested_for_person}>
-                                                    {ticket.requested_for_person}
+                                                <Tooltip text={ticket.requested_for_person_name || ticket.requested_for_person}>
+                                                    {ticket.requested_for_person_name || ticket.requested_for_person}
                                                 </Tooltip>
                                             </td>
                                             <td className="text-text-muted uppercase">
@@ -280,8 +305,8 @@ const SearchPage: React.FC = () => {
                                                 </Tooltip>
                                             </td>
                                             <td className="font-bold text-text-primary uppercase">
-                                                <Tooltip text={ticket.expert_assignee || '-'}>
-                                                    {ticket.expert_assignee || '-'}
+                                                <Tooltip text={ticket.expert_assignee_name || ticket.expert_assignee || '-'}>
+                                                    {ticket.expert_assignee_name || ticket.expert_assignee || '-'}
                                                 </Tooltip>
                                             </td>
                                             <td className="text-text-secondary uppercase">

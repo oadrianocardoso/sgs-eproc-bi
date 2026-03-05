@@ -269,9 +269,31 @@ const TicketDetailsPage: React.FC = () => {
                         <div className="space-y-5">
                             <div>
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
-                                    <User size={12} /> Solicitante
+                                    <AlertCircle size={12} /> ID do Processo
                                 </label>
-                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.requested_for_person || '-'}</p>
+                                <p className="text-sm font-semibold text-text-primary">{ticket.process_id || '-'}</p>
+                            </div>
+
+                            <hr className="border-border-light" />
+
+                            <div>
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
+                                    <User size={12} /> Solicitante (Final)
+                                </label>
+                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.requested_for_person_name || ticket.requested_for_person || '-'}</p>
+                                {ticket.requested_for_person_location && (
+                                    <p className="text-[10px] text-text-muted mt-0.5">{ticket.requested_for_person_location}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
+                                    <User size={12} /> Aberto Por
+                                </label>
+                                <p className="text-sm font-medium text-text-secondary uppercase">{ticket.requested_by_person || '-'}</p>
+                                {ticket.requested_by_person_title && (
+                                    <p className="text-[10px] text-text-muted mt-0.5">{ticket.requested_by_person_title}</p>
+                                )}
                             </div>
 
                             <hr className="border-border-light" />
@@ -294,10 +316,21 @@ const TicketDetailsPage: React.FC = () => {
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
                                     <User size={12} className="text-primary-500" /> Especialista
                                 </label>
-                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.expert_assignee || 'Não atribuído'}</p>
+                                <p className="text-sm font-semibold text-text-primary uppercase">{ticket.expert_assignee_name || ticket.expert_assignee || 'Não atribuído'}</p>
                             </div>
 
                             <hr className="border-border-light" />
+
+                            {ticket.slt_sla_target_date && (
+                                <div>
+                                    <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
+                                        <Clock size={12} className="text-rose-500" /> Prazo SLA
+                                    </label>
+                                    <p className="text-sm font-bold text-rose-700">
+                                        {new Date(ticket.slt_sla_target_date).toLocaleString('pt-BR')}
+                                    </p>
+                                </div>
+                            )}
 
                             <div>
                                 <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
@@ -307,13 +340,11 @@ const TicketDetailsPage: React.FC = () => {
                                     {ticket.close_time ? new Date(ticket.close_time).toLocaleString('pt-BR') : 'Em andamento'}
                                 </p>
                             </div>
-                            <div>
-                                <label className="flex items-center gap-2 text-[10px] font-bold text-text-muted uppercase mb-1">
-                                    <Clock size={12} /> Última Atualização
-                                </label>
-                                <p className="text-sm font-medium text-text-secondary">
-                                    {ticket.last_update_time ? new Date(ticket.last_update_time).toLocaleString('pt-BR') : '-'}
-                                </p>
+
+                            <div className="pt-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 font-bold text-[10px] rounded-lg border border-blue-100 uppercase tracking-wider">
+                                    {ticket.number_of_attachments || 0} Anexos
+                                </span>
                             </div>
                         </div>
                     </div>

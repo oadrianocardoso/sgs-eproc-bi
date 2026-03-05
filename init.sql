@@ -19,17 +19,42 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon;
 -- Tabela Principal de Chamados
 CREATE TABLE IF NOT EXISTS public.chamados (
   id TEXT PRIMARY KEY,
+  process_id TEXT,
   create_time TIMESTAMP WITH TIME ZONE,
   close_time TIMESTAMP WITH TIME ZONE,
   last_update_time TIMESTAMP WITH TIME ZONE,
+  data_envio_aceite_c TIMESTAMP WITH TIME ZONE,
+  number_of_attachments INTEGER DEFAULT 0,
+  data_ultimo_adjunto_c TIMESTAMP WITH TIME ZONE,
+  slt_sla_target_date TIMESTAMP WITH TIME ZONE,
+  slt_ola_target_date TIMESTAMP WITH TIME ZONE,
   status_sccdsmax_c TEXT,
   status TEXT,
+  relation_layout_item TEXT,
+  requested_by_person TEXT,
+  requested_by_person_title TEXT,
   requested_for_person TEXT,
+  requested_for_person_avatar TEXT,
+  requested_for_person_org_group TEXT,
+  requested_for_person_upn TEXT,
+  requested_for_person_is_deleted BOOLEAN DEFAULT false,
+  requested_for_person_is_vip BOOLEAN DEFAULT false,
+  requested_for_person_id TEXT,
+  requested_for_person_name TEXT,
+  requested_for_person_location TEXT,
   description TEXT,
   solution TEXT,
   assigned_to_group TEXT,
   expert_group TEXT,
   expert_assignee TEXT,
+  expert_assignee_org_group TEXT,
+  expert_assignee_upn TEXT,
+  expert_assignee_is_deleted BOOLEAN DEFAULT false,
+  expert_assignee_is_vip BOOLEAN DEFAULT false,
+  expert_assignee_id TEXT,
+  expert_assignee_avatar TEXT,
+  expert_assignee_name TEXT,
+  expert_assignee_location TEXT,
   atendido_por_c TEXT,
   global_id_c_id TEXT,
   global_id_c TEXT,
@@ -40,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.chamados (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   -- Full Text Search column (Generated Automatically)
   fts_document TSVECTOR GENERATED ALWAYS AS (
-    to_tsvector('portuguese', coalesce(description, '') || ' ' || coalesce(solution, '') || ' ' || coalesce(comments, ''))
+    to_tsvector('portuguese', coalesce(description, '') || ' ' || coalesce(solution, '') || ' ' || coalesce(comments, '') || ' ' || coalesce(requested_for_person_name, ''))
   ) STORED
 );
 

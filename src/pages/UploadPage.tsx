@@ -91,17 +91,42 @@ const UploadPage: React.FC = () => {
 
                 const mapping: Record<string, string> = {
                     'Id': 'id',
+                    'ProcessId': 'process_id',
                     'CreateTime': 'create_time',
                     'CloseTime': 'close_time',
                     'LastUpdateTime': 'last_update_time',
+                    'DataEnvioAceite_c': 'data_envio_aceite_c',
+                    'NumberOfAttachments': 'number_of_attachments',
+                    'DataUltimoAdjunto_c': 'data_ultimo_adjunto_c',
+                    'SLT.SLATargetDate': 'slt_sla_target_date',
+                    'SLT.OLATargetDate': 'slt_ola_target_date',
                     'StatusSCCDSMAX_c': 'status_sccdsmax_c',
                     'Status': 'status',
+                    'RELATION_LAYOUT.item': 'relation_layout_item',
+                    'RequestedByPerson': 'requested_by_person',
+                    'RequestedByPerson.Title': 'requested_by_person_title',
                     'RequestedForPerson': 'requested_for_person',
+                    'RequestedForPerson.Avatar': 'requested_for_person_avatar',
+                    'RequestedForPerson.OrganizationalGroup': 'requested_for_person_org_group',
+                    'RequestedForPerson.Upn': 'requested_for_person_upn',
+                    'RequestedForPerson.IsDeleted': 'requested_for_person_is_deleted',
+                    'RequestedForPerson.IsVIP': 'requested_for_person_is_vip',
+                    'RequestedForPerson.Id': 'requested_for_person_id',
+                    'RequestedForPerson.Name': 'requested_for_person_name',
+                    'RequestedForPerson.Location': 'requested_for_person_location',
                     'Description': 'description',
                     'Solution': 'solution',
                     'AssignedToGroup': 'assigned_to_group',
                     'ExpertGroup': 'expert_group',
                     'ExpertAssignee': 'expert_assignee',
+                    'ExpertAssignee.OrganizationalGroup': 'expert_assignee_org_group',
+                    'ExpertAssignee.Upn': 'expert_assignee_upn',
+                    'ExpertAssignee.IsDeleted': 'expert_assignee_is_deleted',
+                    'ExpertAssignee.IsVIP': 'expert_assignee_is_vip',
+                    'ExpertAssignee.Id': 'expert_assignee_id',
+                    'ExpertAssignee.Avatar': 'expert_assignee_avatar',
+                    'ExpertAssignee.Name': 'expert_assignee_name',
+                    'ExpertAssignee.Location': 'expert_assignee_location',
                     'AtendidoPor_c': 'atendido_por_c',
                     'GlobalId_c.Id': 'global_id_c_id',
                     'GlobalId_c': 'global_id_c',
@@ -142,7 +167,7 @@ const UploadPage: React.FC = () => {
                             const processedRow = { ...row };
 
                             // Robust numeric parsing for integers
-                            const integerFields = ['numero_rejeicoes_c', 'records_count']; // Add any other potentially numeric fields
+                            const integerFields = ['numero_rejeicoes_c', 'number_of_attachments'];
                             integerFields.forEach(field => {
                                 if (processedRow[field] !== undefined) {
                                     const val = String(processedRow[field]).trim();
@@ -150,12 +175,31 @@ const UploadPage: React.FC = () => {
                                 }
                             });
 
-                            if (processedRow.is_global_c !== undefined) {
-                                processedRow.is_global_c = String(processedRow.is_global_c).toLowerCase() === 'true';
-                            }
+                            // Boolean parsing
+                            const booleanFields = [
+                                'is_global_c',
+                                'requested_for_person_is_deleted',
+                                'requested_for_person_is_vip',
+                                'expert_assignee_is_deleted',
+                                'expert_assignee_is_vip'
+                            ];
+                            booleanFields.forEach(field => {
+                                if (processedRow[field] !== undefined) {
+                                    const val = String(processedRow[field]).toLowerCase().trim();
+                                    processedRow[field] = val === 'true' || val === 'yes' || val === '1' || val === 'sim';
+                                }
+                            });
 
                             // Ensure empty dates are null or handle numeric timestamps
-                            const dateFields = ['create_time', 'close_time', 'last_update_time'];
+                            const dateFields = [
+                                'create_time',
+                                'close_time',
+                                'last_update_time',
+                                'data_envio_aceite_c',
+                                'data_ultimo_adjunto_c',
+                                'slt_sla_target_date',
+                                'slt_ola_target_date'
+                            ];
                             dateFields.forEach(field => {
                                 const val = processedRow[field];
                                 if (!val || val === '' || val === 'null' || val === 'undefined') {
