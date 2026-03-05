@@ -114,13 +114,11 @@ DECLARE
   prev_total BIGINT;
   avg_mttr INTERVAL;
 BEGIN
-  -- Total chamados in period
   SELECT COUNT(*) INTO total_count
   FROM public.chamados
   WHERE (date_from IS NULL OR create_time >= date_from)
     AND (date_to IS NULL OR create_time <= date_to);
 
-  -- Previous period total
   SELECT COUNT(*) INTO prev_total
   FROM public.chamados
   WHERE date_from IS NOT NULL
@@ -128,7 +126,6 @@ BEGIN
     AND create_time >= date_from - (date_to - date_from)
     AND create_time < date_from;
 
-  -- Average MTTR
   SELECT AVG(close_time - create_time) INTO avg_mttr
   FROM public.chamados
   WHERE close_time IS NOT NULL
@@ -184,7 +181,16 @@ BEGIN
       WHERE solution IS NOT NULL AND solution != ''
         AND (date_from IS NULL OR create_time >= date_from)
         AND (date_to IS NULL OR create_time <= date_to)
-    )
+    ),
+
+    'max_group_count', COALESCE((
+      SELECT MAX(cnt) FROM (
+        SELECT COUNT(*) as cnt
+        FROM public.chamados
+        WHERE assigned_to_group IS NOT NULL
+        GROUP BY assigned_to_group
+      ) g
+    ), 1)
   ) INTO result;
 
   RETURN result;
@@ -216,11 +222,9 @@ DECLARE
 BEGIN
   offset_val := (page_number - 1) * page_size;
 
-  -- Count total matching records
   SELECT COUNT(*) INTO total_count
   FROM public.chamados c
   WHERE
-    -- Text search
     (search_query = '' OR (
       CASE search_field
         WHEN 'descricao' THEN c.fts_document @@ plainto_tsquery('portuguese', search_query)
@@ -233,21 +237,16 @@ BEGIN
           OR c.id ILIKE '%' || search_query || '%'
       END
     ))
-    -- Status filter
     AND (status_filter IS NULL OR c.status = ANY(status_filter))
-    -- Grupo filter (Assigned to group)
     AND (grupo_filter IS NULL OR c.assigned_to_group = ANY(grupo_filter))
-    -- Date range
     AND (date_from IS NULL OR c.create_time >= date_from)
     AND (date_to IS NULL OR c.create_time <= date_to)
-    -- Solution filter
     AND (
       has_solution = 'todos'
       OR (has_solution = 'com' AND c.solution IS NOT NULL AND c.solution != '')
       OR (has_solution = 'sem' AND (c.solution IS NULL OR c.solution = ''))
     );
 
-  -- Get paginated results
   SELECT json_build_object(
     'data', COALESCE((
       SELECT json_agg(row_to_json(r))
