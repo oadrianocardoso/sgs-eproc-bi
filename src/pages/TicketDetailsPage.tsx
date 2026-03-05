@@ -47,6 +47,23 @@ const TicketDetailsPage: React.FC = () => {
     }, [id]);
 
     const fetchLocalHistory = async (entityId: string) => {
+        const { data: factEvents } = await supabase
+            .from('fato_eventos')
+            .select('change_type, event_time, user_id, user_name, change_properties')
+            .eq('chamado_id', entityId)
+            .order('event_time', { ascending: false });
+
+        if (factEvents && factEvents.length > 0) {
+            setHistory(factEvents.map((evt: any) => ({
+                change_type: evt.change_type,
+                time: evt.event_time,
+                user_id: evt.user_id,
+                user_name: evt.user_name,
+                change_properties: evt.change_properties || {}
+            })));
+            return;
+        }
+
         const { data: localHistory } = await supabase
             .from('chamados_historico')
             .select('*')
@@ -228,7 +245,7 @@ const TicketDetailsPage: React.FC = () => {
                                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                             <span className="text-[10px] font-bold text-purple-600 uppercase mb-2 block">{item.change_type}</span>
                                             <div className="space-y-2">
-                                                {Object.entries(item.change_properties).map(([prop, values]: [string, any]) => {
+                                                {Object.entries(item.change_properties || {}).map(([prop, values]: [string, any]) => {
                                                     const formatValue = (val: any) => {
                                                         if (val === null || val === undefined || val === '') return 'vazio';
                                                         try {
