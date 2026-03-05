@@ -20,7 +20,7 @@ const Layout: React.FC = () => {
         <div className="flex bg-slate-50 min-h-screen">
             <Sidebar />
 
-            <main className="main-content flex-1">
+            <main className="main-content flex-1 min-w-0">
                 {/* Top Header */}
                 <header className="top-header">
                     <div className="flex items-center gap-4">
@@ -59,8 +59,8 @@ const Layout: React.FC = () => {
                 </header>
 
                 {/* Sub-Header / Tabs (Screenshot 1) */}
-                <div className="bg-white border-bottom border-border-light px-8 pt-4 flex items-center justify-between">
-                    <div className="flex gap-8">
+                <div className="bg-white border-bottom border-border-light px-4 sm:px-6 lg:px-8 pt-4 flex flex-wrap items-center justify-between gap-3 min-w-0">
+                    <div className="flex gap-8 min-w-0 overflow-x-auto custom-scrollbar">
                         <div className={`nav-tab ${location.pathname === '/dashboard' ? 'active' : ''}`}>Visão Geral</div>
                         <div className="nav-tab">Performance</div>
                         <div className="nav-tab">Equipe</div>
@@ -75,7 +75,7 @@ const Layout: React.FC = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="p-8 w-full flex-1">
+                <div className="p-4 sm:p-6 lg:p-8 flex-1 min-w-0">
                     <Outlet />
                 </div>
 
