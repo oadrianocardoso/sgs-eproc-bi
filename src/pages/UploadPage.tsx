@@ -216,9 +216,8 @@ const UploadPage: React.FC = () => {
 
                     const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
-                    // VPS: chunks otimizados + envio paralelo
+                    // VPS: chunks otimizados (sequenciais para evitar deadlocks nas dimensões)
                     const chunkSize = 50;
-                    const concurrency = 3;
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
                     let completed = 0;
 
@@ -227,20 +226,13 @@ const UploadPage: React.FC = () => {
                         chunks.push(uniqueProcessedData.slice(i * chunkSize, (i + 1) * chunkSize));
                     }
 
-                    // Processa N chunks em paralelo para máximo throughput
-                    for (let i = 0; i < chunks.length; i += concurrency) {
-                        const batch = chunks.slice(i, i + concurrency);
-                        const results = await Promise.all(
-                            batch.map(chunk =>
-                                supabase.from('chamados').upsert(chunk, { onConflict: 'id' })
-                            )
-                        );
+                    // Processa chunks sequencialmente para evitar deadlock de tabelas ligadas (dimensões)
+                    for (const chunk of chunks) {
+                        const { error } = await supabase.from('chamados').upsert(chunk, { onConflict: 'id' });
 
-                        for (const { error } of results) {
-                            if (error) throw error;
-                        }
+                        if (error) throw error;
 
-                        completed += batch.length;
+                        completed += chunk.length;
                         setProgress(Math.round((completed / chunksCount) * 100));
                     }
 
