@@ -103,14 +103,14 @@ const StatsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="h-72 w-full flex items-center justify-center">
+                    <div className="h-72 w-full">
                         {loading ? (
-                            <div className="flex flex-col items-center gap-2 opacity-20">
+                            <div className="h-full w-full flex flex-col items-center justify-center gap-2 opacity-20">
                                 <RefreshCw size={24} className="animate-spin text-primary-500" />
                                 <span className="text-[10px] font-bold uppercase tracking-widest">Carregando Dados...</span>
                             </div>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <AreaChart data={stats?.by_hour || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -151,14 +151,14 @@ const StatsPage: React.FC = () => {
                         <p className="text-[11px] text-text-muted">Distribuição percentual</p>
                     </div>
 
-                    <div className="h-44 relative flex items-center justify-center">
+                    <div className="h-44 w-full relative">
                         {loading ? (
-                            <div className="flex flex-col items-center gap-1 opacity-20">
+                            <div className="h-full w-full flex flex-col items-center justify-center gap-1 opacity-20">
                                 <RefreshCw size={20} className="animate-spin text-primary-500" />
                             </div>
                         ) : (
                             <>
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                     <PieChart>
                                         <Pie
                                             data={stats?.by_status || []}
