@@ -3,6 +3,6 @@ import { resolveApiBaseUrl } from './apiBaseUrl'
 
 export const apiBaseUrl = resolveApiBaseUrl()
 const supabaseUrl = apiBaseUrl
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsYnFjbWNsZGN0ZGFmZXdmZWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NDEzNDcsImV4cCI6MjA4NzIxNzM0N30.DmLtiuU9rG7Si4-32gk7AHI2ZpNMJsBTkQxPxqDiPm8'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InNncy1lcHJvYy1iaSIsImlhdCI6MTc3MjczMzU1OSwiZXhwIjoyMDg3MjE3MzQ3fQ.bcu-qGy4N-bj2HC8sjRFipbCp7kniGSxoDLKkYb9v5c'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
