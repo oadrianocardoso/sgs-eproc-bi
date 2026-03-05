@@ -40,6 +40,13 @@ function normalizeCookieHeader(input: string): string {
     return normalized;
 }
 
+function formatIdPreview(ids: string[], maxItems = 20): string {
+    if (ids.length === 0) return '';
+    const preview = ids.slice(0, maxItems).join(', ');
+    const suffix = ids.length > maxItems ? ` ... (+${ids.length - maxItems})` : '';
+    return `${preview}${suffix}`;
+}
+
 export default function DataEnricher() {
     const [cookie, setCookie] = useState('');
     const [syncing, setSyncing] = useState(false);
@@ -64,7 +71,7 @@ export default function DataEnricher() {
                 .from('chamados')
                 .select('id')
                 .is('enriched_at', null)
-                .limit(50);
+                .order('id', { ascending: true });
 
             if (fetchError) throw fetchError;
 
@@ -77,6 +84,7 @@ export default function DataEnricher() {
             let completed = 0;
             let failed = 0;
             const failedItems: string[] = [];
+            const enrichedIds: string[] = [];
 
             for (const row of chamados) {
                 try {
@@ -208,12 +216,14 @@ export default function DataEnricher() {
                             .from('chamados')
                             .update({ enriched_at: new Date().toISOString() })
                             .eq('id', row.id);
+                        enrichedIds.push(String(row.id));
 
                     } else if (json.completionStatus === 'OK') {
                         await supabase
                             .from('chamados')
                             .update({ enriched_at: new Date().toISOString() })
                             .eq('id', row.id);
+                        enrichedIds.push(String(row.id));
                     }
 
                 } catch (err) {
@@ -229,12 +239,14 @@ export default function DataEnricher() {
             if (failed > 0) {
                 const successCount = completed - failed;
                 const firstFailure = failedItems[0] ? ` Primeira falha: ${failedItems[0]}` : '';
+                const idsText = formatIdPreview(enrichedIds);
                 setStatus({
                     type: 'error',
-                    message: `Processo concluido com falhas. Sucesso: ${successCount}, Falhas: ${failed}.${firstFailure}`
+                    message: `Processo concluido com falhas. Sucesso: ${successCount}, Falhas: ${failed}. IDs enriquecidos: ${idsText}.${firstFailure}`
                 });
             } else {
-                setStatus({ type: 'success', message: `${completed} chamados enriquecidos com sucesso!` });
+                const idsText = formatIdPreview(enrichedIds);
+                setStatus({ type: 'success', message: `${completed} chamados enriquecidos com sucesso. IDs: ${idsText}` });
             }
 
         } catch (err: unknown) {
