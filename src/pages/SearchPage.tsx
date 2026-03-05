@@ -76,6 +76,7 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         fetchMetadata();
         executeSearch();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
     const fetchMetadata = async () => {
@@ -148,7 +149,7 @@ const SearchPage: React.FC = () => {
                             <select
                                 className="input h-10 w-32 px-2 text-[10px] font-bold uppercase"
                                 value={searchField}
-                                onChange={(e) => setSearchField(e.target.value as any)}
+                                onChange={(e) => setSearchField(e.target.value as 'both' | 'descricao' | 'solucao')}
                             >
                                 <option value="both">Todos</option>
                                 <option value="descricao">Descrição</option>
