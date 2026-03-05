@@ -20,6 +20,8 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true
           script: |
             cd /docker/sgs-eproc-bi
             git pull origin main
