@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Papa from 'papaparse';
 import StatusBadge from '../components/StatusBadge';
+import DataEnricher from '../components/DataEnricher';
 
 interface UploadHistory {
     id: string;
@@ -87,7 +88,7 @@ const UploadPage: React.FC = () => {
             delimiter: ';',
             encoding: 'UTF-8',
             transformHeader: (header) => {
-                const clean = header.trim().replace(/^[\uFEFF\u200B\u200C\u200D\u200E\u200F]+|[\uFEFF\u200B\u200C\u200D\u200E\u200F]+$/g, '').replace(/^"|"$/g, '');
+                const clean = header.trim().replace(/^\uFEFF/, '').replace(/^"|"$/g, '');
 
                 const mapping: Record<string, string> = {
                     'Id': 'id',
@@ -161,6 +162,7 @@ const UploadPage: React.FC = () => {
 
                     // Deduplicate and process data
                     const uniqueDataMap = new Map();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     results.data.forEach((row: any) => {
                         if (row.id) {
                             // Data cleanup: convert numeric strings and booleans
@@ -221,6 +223,7 @@ const UploadPage: React.FC = () => {
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
                     let completed = 0;
 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const chunks: any[][] = [];
                     for (let i = 0; i < chunksCount; i++) {
                         chunks.push(uniqueProcessedData.slice(i * chunkSize, (i + 1) * chunkSize));
@@ -243,9 +246,10 @@ const UploadPage: React.FC = () => {
 
                     setStatus({ type: 'success', message: `${uniqueProcessedData.length} registros importados!` });
                     fetchHistory();
-                } catch (err: any) {
+                } catch (err: unknown) {
                     console.error('Erro no upload:', err);
-                    setStatus({ type: 'error', message: `Falha na importação: ${err.message}` });
+                    const errorMessage = err instanceof Error ? err.message : String(err);
+                    setStatus({ type: 'error', message: `Falha na importação: ${errorMessage}` });
                 } finally {
                     setUploading(false);
                 }
@@ -320,53 +324,58 @@ const UploadPage: React.FC = () => {
                 </div>
             )}
 
-            {/* History Section */}
-            <div className="bento-card">
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-slate-100 text-text-secondary rounded-lg flex items-center justify-center">
-                            <History size={18} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* History Section */}
+                <div className="bento-card">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-slate-100 text-text-secondary rounded-lg flex items-center justify-center">
+                                <History size={18} />
+                            </div>
+                            <h2 className="text-sm font-bold text-text-primary font-heading uppercase tracking-wide">Histórico Recente</h2>
                         </div>
-                        <h2 className="text-sm font-bold text-text-primary font-heading uppercase tracking-wide">Histórico Recente</h2>
+                        <button onClick={fetchHistory} className="text-[11px] font-bold text-primary-600 flex items-center gap-1.5 hover:text-primary-700">
+                            <RefreshCw size={14} />
+                            Atualizar
+                        </button>
                     </div>
-                    <button onClick={fetchHistory} className="text-[11px] font-bold text-primary-600 flex items-center gap-1.5 hover:text-primary-700">
-                        <RefreshCw size={14} />
-                        Atualizar
-                    </button>
+
+                    <div className="table-wrapper">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th className="pl-6">Arquivo</th>
+                                    <th>Data</th>
+                                    <th>Volume</th>
+                                    <th>Status</th>
+                                    <th className="pr-6 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.length > 0 ? history.map((item) => (
+                                    <tr key={item.id}>
+                                        <td className="pl-6 font-semibold text-text-primary">{item.filename}</td>
+                                        <td className="text-text-muted">{new Date(item.created_at).toLocaleDateString()}</td>
+                                        <td className="font-bold text-text-secondary">{item.records_count} rows</td>
+                                        <td><StatusBadge status={item.status} /></td>
+                                        <td className="pr-6 text-right">
+                                            <button className="p-2 text-text-muted hover:text-rose-500 transition-colors">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={5} className="text-center py-10 text-xs text-text-muted">Nenhum upload registrado</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div className="table-wrapper">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th className="pl-6">Arquivo</th>
-                                <th>Data</th>
-                                <th>Volume</th>
-                                <th>Status</th>
-                                <th className="pr-6 text-right">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {history.length > 0 ? history.map((item) => (
-                                <tr key={item.id}>
-                                    <td className="pl-6 font-semibold text-text-primary">{item.filename}</td>
-                                    <td className="text-text-muted">{new Date(item.created_at).toLocaleDateString()}</td>
-                                    <td className="font-bold text-text-secondary">{item.records_count} rows</td>
-                                    <td><StatusBadge status={item.status} /></td>
-                                    <td className="pr-6 text-right">
-                                        <button className="p-2 text-text-muted hover:text-rose-500 transition-colors">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan={5} className="text-center py-10 text-xs text-text-muted">Nenhum upload registrado</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                {/* API Enricher Section */}
+                <DataEnricher />
             </div>
 
             <div className="grid grid-cols-2 gap-6 opacity-60">
