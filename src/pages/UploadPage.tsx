@@ -216,8 +216,8 @@ const UploadPage: React.FC = () => {
 
                     const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
-                    // VPS: chunks grandes + envio paralelo para máxima velocidade
-                    const chunkSize = 200;
+                    // VPS: chunks otimizados + envio paralelo
+                    const chunkSize = 50;
                     const concurrency = 3;
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
                     let completed = 0;
