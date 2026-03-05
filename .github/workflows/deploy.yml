@@ -24,8 +24,11 @@ jobs:
           port: 22
           debug: true
           script: |
+            set -e
             cd /docker/sgs-eproc-bi
-            git pull origin main
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
             echo "DEPLOYED_COMMIT=$(git rev-parse HEAD)"
             docker compose up -d --build --force-recreate --remove-orphans
             docker compose ps
