@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.git/
+*.log
+.DS_Store
+Dockerfile
+docker-compose.yml
+.agent/
+.gemini/
+*.mjs
+*.sql
+*.js
