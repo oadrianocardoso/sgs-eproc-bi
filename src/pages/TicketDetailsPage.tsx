@@ -43,6 +43,7 @@ const TicketDetailsPage: React.FC = () => {
         };
 
         fetchTicketDetails();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchLocalHistory = async (entityId: string) => {
@@ -238,7 +239,9 @@ const TicketDetailsPage: React.FC = () => {
                                                                 }
                                                                 return JSON.stringify(parsed);
                                                             }
-                                                        } catch (e) { }
+                                                        } catch {
+                                                            return String(val);
+                                                        }
                                                         return String(val);
                                                     };
 
