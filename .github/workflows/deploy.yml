@@ -9,6 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Check Secrets
+        run: |
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "❌ SSH_PRIVATE_KEY está VAZIA"; else echo "✅ SSH_PRIVATE_KEY encontrada"; fi
+          if [ -z "${{ secrets.VPS_HOST }}" ]; then echo "❌ VPS_HOST está VAZIO"; else echo "✅ VPS_HOST encontrado"; fi
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
