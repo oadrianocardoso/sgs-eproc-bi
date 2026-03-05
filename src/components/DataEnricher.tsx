@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, apiBaseUrl } from '../lib/supabase';
 import { RefreshCw, Key, CheckCircle, Database, AlertCircle } from 'lucide-react';
 
 function extractErrorMessage(err: unknown): string {
@@ -81,8 +81,7 @@ export default function DataEnricher() {
             for (const row of chamados) {
                 try {
                     // 2. Chama a API do TJSP atraves do tunel Nginx
-                    const apiUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:3000';
-                    const response = await fetch(`${apiUrl}/tjsp-api/rest/213963628/audit/ems-history-service/Request?changeType=ALL&entityId=${row.id}&meta=Count.Response&order=time+desc&size=250&skip=0`, {
+                    const response = await fetch(`${apiBaseUrl}/tjsp-api/rest/213963628/audit/ems-history-service/Request?changeType=ALL&entityId=${row.id}&meta=Count.Response&order=time+desc&size=250&skip=0`, {
                         method: 'GET',
                         headers: {
                             Accept: 'application/json, text/plain, */*',

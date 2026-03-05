@@ -27,6 +27,22 @@ COPY --from=build-stage /app/dist /usr/share/nginx/html
 # Configuração simples para suportar rotas do React (SPA)
 RUN echo 'server { \
     listen 80; \
+    location /rest/ { \
+        proxy_pass http://api-gateway:3000; \
+        proxy_http_version 1.1; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+    location /tjsp-api/ { \
+        proxy_pass http://api-gateway:3000; \
+        proxy_http_version 1.1; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \

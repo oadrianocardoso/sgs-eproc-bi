@@ -1,5 +1,12 @@
 # React + TypeScript + Vite
 
+## Configuração de API (VPS e Local)
+
+- `VITE_SUPABASE_URL` agora é opcional.
+- Em produção (VPS), se vazio, o frontend usa a própria origem (`window.location.origin`).
+- Em desenvolvimento local, o fallback automático usa `http://localhost:3000` quando o host é `localhost`.
+- O Nginx do frontend encaminha `/rest/*` e `/tjsp-api/*` para o serviço `api-gateway` no Docker Compose.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
