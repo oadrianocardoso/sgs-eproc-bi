@@ -39,7 +39,8 @@ services:
       PGRST_DB_SCHEMA: public
       PGRST_DB_ANON_ROLE: anon
       PGRST_DB_PORT: 3000
-      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET}
+      # Fallback para evitar PGRST300 quando .env estiver ausente/desatualizado na VPS.
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:-sgs_eproc_bi_jwt_secret_change_me_2026_32chars}
     depends_on:
       - db
     restart: always

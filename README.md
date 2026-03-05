@@ -7,6 +7,7 @@
 - Em desenvolvimento local, o fallback automático usa `http://localhost:3000` quando o host é `localhost`.
 - O Nginx do frontend encaminha `/rest/*` e `/tjsp-api/*` para o serviço `api-gateway` no Docker Compose.
 - O PostgREST precisa de `PGRST_JWT_SECRET` e o `VITE_SUPABASE_ANON_KEY` deve ser assinado com esse mesmo segredo (evita erro `PGRST300`).
+- O `docker-compose.yml` já possui fallback de `PGRST_JWT_SECRET` para reduzir risco de indisponibilidade por `.env` ausente na VPS.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
