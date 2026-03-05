@@ -488,45 +488,64 @@ const SearchPage: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
+    const activeRulesCount = rules.filter((r) => (r.operator === 'is_empty' || r.operator === 'is_not_empty') ? !!r.field : (!!r.field && r.value.trim() !== '')).length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
     return (
-        <div className="space-y-6 animate-fade-in pb-10">
+        <div className="space-y-8 animate-fade-in pb-10">
             {/* Filter Section */}
             <div className="bento-card">
-                <div className="space-y-5">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-text-muted">Filtros Avancados</p>
-                            <p className="text-[11px] text-text-secondary">
-                                Combine campos da tabela chamados, comentarios e historico de alteracoes.
+                <div className="space-y-6">
+                    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted">Relatorios Avancados</p>
+                            <h2 className="text-base sm:text-lg font-bold text-text-primary font-heading">Construtor de Filtros</h2>
+                            <p className="text-[11px] text-text-secondary max-w-2xl">
+                                Combine campos de chamados, comentarios e historico em uma unica consulta, no mesmo padrao visual do dashboard.
                             </p>
                         </div>
-                        <div className="inline-flex p-1 bg-slate-50 border border-border-light rounded-lg">
-                            <button
-                                className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md ${ruleMode === 'all' ? 'bg-white text-primary-600 shadow-sm' : 'text-text-muted'}`}
-                                onClick={() => setRuleMode('all')}
-                            >
-                                Todos (AND)
-                            </button>
-                            <button
-                                className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md ${ruleMode === 'any' ? 'bg-white text-primary-600 shadow-sm' : 'text-text-muted'}`}
-                                onClick={() => setRuleMode('any')}
-                            >
-                                Qualquer (OR)
-                            </button>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full xl:w-auto">
+                            <div className="bg-slate-50 border border-border-light rounded-lg px-3 py-2">
+                                <p className="text-[9px] font-bold uppercase text-text-muted tracking-wider">Registros</p>
+                                <p className="text-sm font-bold text-text-primary">{loading ? '...' : totalCount.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-slate-50 border border-border-light rounded-lg px-3 py-2">
+                                <p className="text-[9px] font-bold uppercase text-text-muted tracking-wider">Regras Ativas</p>
+                                <p className="text-sm font-bold text-text-primary">{activeRulesCount}</p>
+                            </div>
+                            <div className="bg-slate-50 border border-border-light rounded-lg px-3 py-2 col-span-2 sm:col-span-1">
+                                <p className="text-[9px] font-bold uppercase text-text-muted tracking-wider">Modo</p>
+                                <p className="text-sm font-bold text-text-primary">{ruleMode === 'all' ? 'AND' : 'OR'}</p>
+                            </div>
                         </div>
+                    </div>
+
+                    <div className="inline-flex p-1 bg-slate-50 border border-border-light rounded-lg w-full sm:w-auto">
+                        <button
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md flex-1 sm:flex-none ${ruleMode === 'all' ? 'bg-white text-primary-600 shadow-sm' : 'text-text-muted'}`}
+                            onClick={() => setRuleMode('all')}
+                        >
+                            Todos (AND)
+                        </button>
+                        <button
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md flex-1 sm:flex-none ${ruleMode === 'any' ? 'bg-white text-primary-600 shadow-sm' : 'text-text-muted'}`}
+                            onClick={() => setRuleMode('any')}
+                        >
+                            Qualquer (OR)
+                        </button>
                     </div>
 
                     <div className="space-y-3">
                         <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
                             Regras em Chamados
                         </label>
-                        <div className="space-y-2">
+                        <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                             {rules.map((rule) => {
                                 const fieldType = detectFieldType(rule.field);
                                 const operators = OPERATOR_OPTIONS[fieldType];
                                 const hideValue = rule.operator === 'is_empty' || rule.operator === 'is_not_empty';
                                 return (
-                                    <div key={rule.id} className="grid grid-cols-1 md:grid-cols-[1.2fr_0.9fr_1fr_auto] gap-2">
+                                    <div key={rule.id} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1.1fr_0.8fr_1fr_auto] gap-2">
                                         <select
                                             className="input h-10 text-xs font-semibold"
                                             value={rule.field}
@@ -559,7 +578,7 @@ const SearchPage: React.FC = () => {
                                             onKeyDown={(e) => e.key === 'Enter' && executeSearch(buildCurrentFilters())}
                                         />
                                         <button
-                                            className="btn btn-outline h-10 w-10 px-0"
+                                            className="btn btn-outline h-10 w-full xl:w-10 px-0"
                                             title="Remover regra"
                                             onClick={() => removeRule(rule.id)}
                                         >
@@ -569,13 +588,13 @@ const SearchPage: React.FC = () => {
                                 );
                             })}
                         </div>
-                        <button className="btn btn-outline btn-sm h-9 px-3" onClick={addRule}>
+                        <button className="btn btn-outline btn-sm h-9 px-3 w-full sm:w-auto" onClick={addRule}>
                             <Plus size={14} />
                             Nova Regra
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
                                 Comentarios (fato_comments)
@@ -633,7 +652,7 @@ const SearchPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                         <button
                             className="btn btn-primary h-10 px-4"
                             onClick={() => {
@@ -664,26 +683,41 @@ const SearchPage: React.FC = () => {
 
             {/* Content Section */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-text-primary px-3 py-1.5 bg-white border border-border-light rounded-lg shadow-sm">
-                            {loading ? '...' : totalCount.toLocaleString()} Registros
-                        </span>
+                <div className="bento-card p-4 sm:p-5 space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div className="px-3 py-2 bg-slate-50 border border-border-light rounded-lg">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-text-muted">Registros</p>
+                                <p className="text-xs font-bold text-text-primary">{loading ? '...' : totalCount.toLocaleString()}</p>
+                            </div>
+                            <div className="px-3 py-2 bg-slate-50 border border-border-light rounded-lg">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-text-muted">Pagina</p>
+                                <p className="text-xs font-bold text-text-primary">{page + 1} de {totalPages}</p>
+                            </div>
+                            <div className="px-3 py-2 bg-slate-50 border border-border-light rounded-lg">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-text-muted">Exibindo</p>
+                                <p className="text-xs font-bold text-text-primary">{loading ? '...' : results.length}</p>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-text-muted lg:mr-auto lg:ml-4">
+                            Layout responsivo com rolagem horizontal e vertical para qualquer resolucao.
+                        </p>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="btn btn-outline btn-sm h-9 px-3" onClick={exportCsv}>
-                            <Download size={14} />
-                            <span className="text-[11px]">CSV</span>
-                        </button>
-                        <button className="btn btn-outline btn-sm h-9 px-3" onClick={() => executeSearch(buildCurrentFilters())}>
-                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                        </button>
-                    </div>
-                </div>
 
-                <div className="table-wrapper">
-                    <div className="overflow-x-auto custom-scrollbar">
-                        <table className="table min-w-[2800px]">
+                    <div className="flex flex-wrap gap-2">
+                        <button className="btn btn-outline btn-sm h-9 px-3 flex-1 sm:flex-none" onClick={exportCsv}>
+                            <Download size={14} />
+                            <span className="text-[11px]">Exportar CSV</span>
+                        </button>
+                        <button className="btn btn-outline btn-sm h-9 px-3 flex-1 sm:flex-none" onClick={() => executeSearch(buildCurrentFilters())}>
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                            <span className="text-[11px]">Atualizar</span>
+                        </button>
+                    </div>
+
+                    <div className="table-wrapper">
+                        <div className="report-table-container custom-scrollbar overflow-auto">
+                            <table className="table report-table min-w-[1500px] lg:min-w-[1900px] 2xl:min-w-[2300px]">
                             <thead>
                                 <tr>
                                     <th className="sticky-col">ID</th>
@@ -798,30 +832,31 @@ const SearchPage: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                {/* Pagination */}
-                {!loading && totalCount > pageSize && (
-                    <div className="flex justify-center items-center gap-3 pt-4">
-                        <button
-                            className="btn btn-outline btn-sm bg-white disabled:opacity-30"
-                            disabled={page === 0}
-                            onClick={() => setPage(p => p - 1)}
-                        >
-                            <ChevronLeft size={14} />
-                        </button>
-                        <span className="text-xs font-bold text-text-secondary px-4 py-2 bg-white border border-border-light rounded-lg">
-                            {page + 1} de {Math.ceil(totalCount / pageSize)}
-                        </span>
-                        <button
-                            className="btn btn-outline btn-sm bg-white disabled:opacity-30"
-                            disabled={(page + 1) * pageSize >= totalCount}
-                            onClick={() => setPage(p => p + 1)}
-                        >
-                            <ChevronRight size={14} />
-                        </button>
                     </div>
-                )}
+
+                    {/* Pagination */}
+                    {!loading && totalCount > pageSize && (
+                        <div className="flex justify-center items-center gap-3 pt-2">
+                            <button
+                                className="btn btn-outline btn-sm bg-white disabled:opacity-30"
+                                disabled={page === 0}
+                                onClick={() => setPage(p => p - 1)}
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <span className="text-xs font-bold text-text-secondary px-4 py-2 bg-white border border-border-light rounded-lg">
+                                {page + 1} de {Math.ceil(totalCount / pageSize)}
+                            </span>
+                            <button
+                                className="btn btn-outline btn-sm bg-white disabled:opacity-30"
+                                disabled={(page + 1) * pageSize >= totalCount}
+                                onClick={() => setPage(p => p + 1)}
+                            >
+                                <ChevronRight size={14} />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

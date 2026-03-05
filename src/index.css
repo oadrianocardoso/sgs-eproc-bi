@@ -419,6 +419,37 @@ h4,
   background: #f8fafc;
 }
 
+/* Search report table responsiveness */
+.report-table-container {
+  max-height: calc(100vh - 360px);
+}
+
+@media (max-height: 900px) {
+  .report-table-container {
+    max-height: calc(100vh - 320px);
+  }
+}
+
+@media (max-height: 760px) {
+  .report-table-container {
+    max-height: calc(100vh - 280px);
+  }
+}
+
+.report-table th,
+.report-table td {
+  width: clamp(190px, 14vw, 280px);
+  min-width: clamp(190px, 14vw, 280px);
+  max-width: clamp(190px, 14vw, 280px);
+}
+
+.report-table th.sticky-col,
+.report-table td.sticky-col {
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+}
+
 /* Upload Specific */
 .upload-zone {
   border: 2px dashed var(--color-border-light);
