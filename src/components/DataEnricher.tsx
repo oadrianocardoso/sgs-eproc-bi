@@ -2,6 +2,44 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { RefreshCw, Key, CheckCircle, Database, AlertCircle } from 'lucide-react';
 
+function extractErrorMessage(err: unknown): string {
+    if (err instanceof Error && err.message) return err.message;
+    if (typeof err === 'string') return err;
+
+    if (err && typeof err === 'object') {
+        const errorObj = err as Record<string, unknown>;
+        const candidates = [
+            errorObj.message,
+            errorObj.error_description,
+            errorObj.error,
+            errorObj.details,
+            errorObj.hint,
+            errorObj.code
+        ];
+
+        const found = candidates.find((v) => typeof v === 'string' && v.trim().length > 0);
+        if (typeof found === 'string') return found;
+
+        try {
+            return JSON.stringify(errorObj);
+        } catch {
+            return 'Erro desconhecido';
+        }
+    }
+
+    return 'Erro desconhecido';
+}
+
+function normalizeCookieHeader(input: string): string {
+    let normalized = input.trim().replace(/^cookie:\s*/i, '');
+    normalized = normalized.replace(/\r?\n/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
+    if (!normalized) return '';
+    if (!normalized.includes('=')) return `JSESSIONID=${normalized}`;
+
+    return normalized;
+}
+
 export default function DataEnricher() {
     const [cookie, setCookie] = useState('');
     const [syncing, setSyncing] = useState(false);
@@ -9,8 +47,10 @@ export default function DataEnricher() {
     const [status, setStatus] = useState<{ type: 'idle' | 'success' | 'error', message: string }>({ type: 'idle', message: '' });
 
     const handleSync = async () => {
-        if (!cookie.trim()) {
-            setStatus({ type: 'error', message: 'Por favor, insira o Cookie de autenticação.' });
+        const cookieHeader = normalizeCookieHeader(cookie);
+
+        if (!cookieHeader) {
+            setStatus({ type: 'error', message: 'Por favor, insira o Cookie de autenticacao.' });
             return;
         }
 
@@ -19,12 +59,12 @@ export default function DataEnricher() {
         setProgress(0);
 
         try {
-            // 1. Busca chamados que ainda não foram enriquecidos
+            // 1. Busca chamados que ainda nao foram enriquecidos
             const { data: chamados, error: fetchError } = await supabase
                 .from('chamados')
                 .select('id')
                 .is('enriched_at', null)
-                .limit(50); // Lote de 50 para teste inicial/performance
+                .limit(50);
 
             if (fetchError) throw fetchError;
 
@@ -35,24 +75,33 @@ export default function DataEnricher() {
             }
 
             let completed = 0;
+            let failed = 0;
+            const failedItems: string[] = [];
 
             for (const row of chamados) {
                 try {
-                    // 2. Chama a API do TJSP através do nosso túnel Nginx
+                    // 2. Chama a API do TJSP atraves do tunel Nginx
                     const apiUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:3000';
                     const response = await fetch(`${apiUrl}/tjsp-api/rest/213963628/audit/ems-history-service/Request?changeType=ALL&entityId=${row.id}&meta=Count.Response&order=time+desc&size=250&skip=0`, {
                         method: 'GET',
                         headers: {
-                            'Accept': 'application/json, text/plain, */*',
-                            'X-Tjsp-Cookie': cookie.trim()
+                            Accept: 'application/json, text/plain, */*',
+                            'X-Tjsp-Cookie': cookieHeader
                         }
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Erro API TJSP: ${response.status}`);
+                        const errorBody = await response.text();
+                        const detail = errorBody ? ` - ${errorBody.slice(0, 240)}` : '';
+                        throw new Error(`Erro API TJSP (${response.status} ${response.statusText})${detail}`);
                     }
 
                     const json = await response.json();
+
+                    if (json.completionStatus && json.completionStatus !== 'OK') {
+                        const apiMessage = json.message || json.error || 'Falha retornada pela API do TJSP';
+                        throw new Error(String(apiMessage));
+                    }
 
                     if (json.completionStatus === 'OK' && json.results && json.results.length > 0) {
                         const eventosMap = new Map();
@@ -95,7 +144,6 @@ export default function DataEnricher() {
                                 // 2. Prepare Fato Field Changes
                                 for (const [key, val] of Object.entries(result.changeProperties)) {
                                     const value = val as { oldValue?: unknown, newValue?: unknown };
-                                    // Ignorar valores muito grandes ou JSON textuais neste nivel
                                     if (['Comments', 'RequestAttachments', 'DetectedEntities', 'UserOptions'].includes(key)) continue;
 
                                     fieldChanges.push({
@@ -141,34 +189,28 @@ export default function DataEnricher() {
                             }
                         }
 
-                        // Upsert Eventos
                         if (eventosMap.size > 0) {
                             const { error: evtErr } = await supabase.from('fato_eventos').upsert(Array.from(eventosMap.values()), { onConflict: 'chamado_id, event_time, user_id', ignoreDuplicates: true });
                             if (evtErr) console.error('Erro ao inserir fato_eventos:', evtErr);
                         }
 
-                        // Upsert Comments
                         if (commentsMap.size > 0) {
                             const { error: cmtErr } = await supabase.from('fato_comments').upsert(Array.from(commentsMap.values()), { onConflict: 'chamado_id, comment_id', ignoreDuplicates: true });
                             if (cmtErr) console.error('Erro ao inserir fato_comments:', cmtErr);
                         }
 
-                        // Insert Field Changes (Como não tem constraint UNIQUE, inserimos normalmente.
-                        // Para total idempotência em eventuais resyncs desta rota, poderiamos deletar antes)
                         if (fieldChanges.length > 0) {
-                            await supabase.from('fato_field_changes').delete().eq('chamado_id', row.id); // Prevents duplicate field changes on resync
+                            await supabase.from('fato_field_changes').delete().eq('chamado_id', row.id);
                             const { error: chgErr } = await supabase.from('fato_field_changes').insert(fieldChanges);
                             if (chgErr) console.error('Erro ao inserir fato_field_changes:', chgErr);
                         }
 
-                        // Marca como enriquecido
                         await supabase
                             .from('chamados')
                             .update({ enriched_at: new Date().toISOString() })
                             .eq('id', row.id);
 
                     } else if (json.completionStatus === 'OK') {
-                        // Sem resultados na auditoria
                         await supabase
                             .from('chamados')
                             .update({ enriched_at: new Date().toISOString() })
@@ -177,18 +219,29 @@ export default function DataEnricher() {
 
                 } catch (err) {
                     console.error(`Erro ao sincronizar chamado ${row.id}:`, err);
+                    failed++;
+                    failedItems.push(`#${row.id}: ${extractErrorMessage(err)}`);
                 }
 
                 completed++;
                 setProgress(Math.round((completed / chamados.length) * 100));
             }
 
-            setStatus({ type: 'success', message: `${completed} chamados enriquecidos com sucesso!` });
+            if (failed > 0) {
+                const successCount = completed - failed;
+                const firstFailure = failedItems[0] ? ` Primeira falha: ${failedItems[0]}` : '';
+                setStatus({
+                    type: 'error',
+                    message: `Processo concluido com falhas. Sucesso: ${successCount}, Falhas: ${failed}.${firstFailure}`
+                });
+            } else {
+                setStatus({ type: 'success', message: `${completed} chamados enriquecidos com sucesso!` });
+            }
 
         } catch (err: unknown) {
             console.error('Erro geral no sync:', err);
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setStatus({ type: 'error', message: `Falha na sincronização: ${errorMessage}` });
+            const errorMessage = extractErrorMessage(err);
+            setStatus({ type: 'error', message: `Falha na sincronizacao: ${errorMessage}` });
         } finally {
             setSyncing(false);
         }
@@ -202,13 +255,13 @@ export default function DataEnricher() {
             </div>
 
             <p className="text-sm text-neutral-600 mb-4">
-                Obtém dados detalhados de auditoria e fluxos chamando a API do TJSP a partir dos chamados em banco.
+                Obtem dados detalhados de auditoria e fluxos chamando a API do TJSP a partir dos chamados em banco.
             </p>
 
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-1">
-                        Cookie de Sessão (TJSP)
+                        Cookie de Sessao (TJSP)
                     </label>
                     <div className="relative">
                         <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
@@ -216,13 +269,13 @@ export default function DataEnricher() {
                             type="password"
                             value={cookie}
                             onChange={(e) => setCookie(e.target.value)}
-                            placeholder="Ex: JSESSIONID=abc123456..."
+                            placeholder="Ex: JSESSIONID=...; XSRF-TOKEN=... (ou so valor do JSESSIONID)"
                             className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-neutral-300 rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
                             disabled={syncing}
                         />
                     </div>
                     <p className="text-xs text-neutral-500 mt-1">
-                        Encontre no DevTools do navegador (Aba Network &gt; Headers &gt; Request Headers &gt; Cookie)
+                        Encontre no DevTools (Network &gt; Headers &gt; Request Headers &gt; Cookie).
                     </p>
                 </div>
 
@@ -261,7 +314,7 @@ export default function DataEnricher() {
                     ) : (
                         <>
                             <RefreshCw className="w-4 h-4" />
-                            Iniciar Sincronização via API
+                            Iniciar Sincronizacao via API
                         </>
                     )}
                 </button>
