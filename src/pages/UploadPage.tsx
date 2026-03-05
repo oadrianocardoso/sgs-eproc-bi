@@ -216,23 +216,32 @@ const UploadPage: React.FC = () => {
 
                     const uniqueProcessedData = Array.from(uniqueDataMap.values());
 
-                    // Aumentado para 10 após remoção temporária dos índices via MCP (Statement Timeout resolvido manualmente)
-                    const chunkSize = 10;
+                    // VPS: chunks grandes + envio paralelo para máxima velocidade
+                    const chunkSize = 200;
+                    const concurrency = 3;
                     const chunksCount = Math.ceil(uniqueProcessedData.length / chunkSize);
+                    let completed = 0;
 
+                    const chunks: any[][] = [];
                     for (let i = 0; i < chunksCount; i++) {
-                        const start = i * chunkSize;
-                        const chunk = uniqueProcessedData.slice(start, start + chunkSize);
+                        chunks.push(uniqueProcessedData.slice(i * chunkSize, (i + 1) * chunkSize));
+                    }
 
-                        const { error: insertError } = await supabase
-                            .from('chamados')
-                            .upsert(chunk, { onConflict: 'id' });
+                    // Processa N chunks em paralelo para máximo throughput
+                    for (let i = 0; i < chunks.length; i += concurrency) {
+                        const batch = chunks.slice(i, i + concurrency);
+                        const results = await Promise.all(
+                            batch.map(chunk =>
+                                supabase.from('chamados').upsert(chunk, { onConflict: 'id' })
+                            )
+                        );
 
-                        if (insertError) throw insertError;
+                        for (const { error } of results) {
+                            if (error) throw error;
+                        }
 
-                        setProgress(Math.round(((i + 1) / chunksCount) * 100));
-                        // Delay reduzido para acelerar o processo sem sobrecarregar
-                        await new Promise(r => setTimeout(r, 100));
+                        completed += batch.length;
+                        setProgress(Math.round((completed / chunksCount) * 100));
                     }
 
                     await supabase
