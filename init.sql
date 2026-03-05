@@ -1,6 +1,21 @@
 -- Inicialização do Banco de Dados Local para o Oráculo BI
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+-- Criar role anon se não existir e dar permissões
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+END
+$$;
+
+GRANT USAGE ON SCHEMA public TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon;
+
 -- Tabela Principal de Chamados
 CREATE TABLE IF NOT EXISTS public.chamados (
   id TEXT PRIMARY KEY,
@@ -254,3 +269,5 @@ $function$;
 
 GRANT EXECUTE ON FUNCTION public.search_chamados TO anon;
 GRANT EXECUTE ON FUNCTION public.search_chamados TO postgres;
+GRANT EXECUTE ON FUNCTION public.get_statistics TO anon;
+GRANT EXECUTE ON FUNCTION public.get_statistics TO postgres;
